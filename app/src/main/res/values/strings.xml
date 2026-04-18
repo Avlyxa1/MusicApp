@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MusicApp</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_library">Library</string>
+    <string name="recently_played">Recently Played</string>
+    <string name="all_songs">All Songs</string>
+    <string name="now_playing">Now Playing</string>
+    <string name="queue">Queue</string>
+    <string name="favourites">Favourites</string>
+    <string name="new_playlist">New Playlist</string>
+    <string name="add_to_favourites">Add to Favourites</string>
+    <string name="remove_from_favourites">Remove from Favourites</string>
+    <string name="add_to_playlist">Add to Playlist</string>
+    <string name="play_next">Play Next</string>
+    <string name="delete_playlist">Delete Playlist</string>
+    <string name="rename_playlist">Rename</string>
+</resources>
