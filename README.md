@@ -13,13 +13,11 @@ MusicApp adalah aplikasi pemutar musik sederhana berbasis Android yang memungkin
 - Navigasi antara daftar lagu dan player
 - Kontrol pemutaran audio dasar
 
-## Teknologi yang Digunakan
+## Fitur yang Digunakan
 
-- Kotlin
-- Android Studio
 - RecyclerView
 - MediaPlayer
-- ViewModel (opsional untuk manajemen data)
+- ViewModel
 - Fragment
 
 ## Struktur Aplikasi
@@ -30,6 +28,8 @@ MusicApp adalah aplikasi pemutar musik sederhana berbasis Android yang memungkin
 - Song Model: Representasi data lagu
 - MusicViewModel: Mengelola data lagu yang dipilih
 
-## Cara Menjalankan Project
+## Tampilan Dalam Aplikasi
 
-1. Clone repository ini:
+## Link Download Aplikasi
+
+"link drive akan ditambahkan ketika file sudah final"
