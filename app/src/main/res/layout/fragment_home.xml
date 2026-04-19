@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/background"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -54,7 +55,8 @@
             android:layout_height="wrap_content"
             android:clipToPadding="false"
             android:paddingHorizontal="16dp"
-            android:orientation="horizontal"/>
+            android:orientation="horizontal"
+            android:nestedScrollingEnabled="true"/>
 
         <!-- All Songs Section -->
         <LinearLayout
@@ -83,4 +85,5 @@
             android:nestedScrollingEnabled="false"/>
 
     </LinearLayout>
-</ScrollView>
+
+</androidx.core.widget.NestedScrollView>

@@ -1,5 +1,10 @@
 package com.example.musicapp.adapters;
 
+import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +50,9 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     }
 
     @Override
-    public int getItemCount() { return songs.size(); }
+    public int getItemCount() {
+        return songs.size();
+    }
 
     public void updateSongs(List<Song> newSongs) {
         this.songs = newSongs;
@@ -57,7 +64,46 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         notifyDataSetChanged();
     }
 
+    int[] songList = {
+            R.raw.song1,
+            R.raw.song2,
+            R.raw.song3,
+            R.raw.song4,
+            R.raw.song5,
+            R.raw.song6,
+            R.raw.song7,
+            R.raw.song8,
+            R.raw.song9,
+            R.raw.song10
+    };
+
+    private Bitmap getAlbumArtFromRaw(Context context, int rawId) {
+        try {
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            AssetFileDescriptor afd = context.getResources().openRawResourceFd(rawId);
+
+            mmr.setDataSource(
+                    afd.getFileDescriptor(),
+                    afd.getStartOffset(),
+                    afd.getLength()
+            );
+
+            byte[] artBytes = mmr.getEmbeddedPicture();
+
+            if (artBytes != null) {
+                return BitmapFactory.decodeByteArray(artBytes, 0, artBytes.length);
+            }
+
+            mmr.release();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     class SongViewHolder extends RecyclerView.ViewHolder {
+
         ImageView ivThumbnail;
         TextView tvTitle, tvArtist, tvDuration;
         ImageButton btnMore;
@@ -74,13 +120,24 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         }
 
         void bind(Song song, int position) {
-            tvTitle.setText(song.getTitle());
-            tvArtist.setText(song.getArtist());
-            tvDuration.setText(song.getFormattedDuration());
-            ivThumbnail.setImageResource(R.drawable.thumb_song);
+
+            Context context = itemView.getContext();
+
+            Bitmap bitmap = getAlbumArtFromRaw(context, songList[position]);
+
+            if (bitmap != null) {
+                ivThumbnail.setImageBitmap(bitmap);
+            } else {
+                ivThumbnail.setImageResource(R.drawable.thumb_song);
+            }
+
+            tvTitle.setText(String.valueOf(song.getTitle()));
+            tvArtist.setText(String.valueOf(song.getArtist()));
+            tvDuration.setText(String.valueOf(song.getDuration()));
 
             boolean isPlaying = song.getId() == currentPlayingId;
             ivPlaying.setVisibility(isPlaying ? View.VISIBLE : View.GONE);
+
             tvTitle.setTextColor(itemView.getContext().getResources().getColor(
                     isPlaying ? R.color.colorAccent : R.color.textPrimary, null));
 

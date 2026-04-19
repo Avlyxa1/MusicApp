@@ -1,5 +1,10 @@
 package com.example.musicapp.fragments;
 
+import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +39,19 @@ public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPla
     private PlaylistManager playlistManager;
     private boolean isQueueVisible = false;
     private boolean isTracking = false;
+
+    int[] songList = {
+            R.raw.song1,
+            R.raw.song2,
+            R.raw.song3,
+            R.raw.song4,
+            R.raw.song5,
+            R.raw.song6,
+            R.raw.song7,
+            R.raw.song8,
+            R.raw.song9,
+            R.raw.song10
+    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -119,6 +137,35 @@ public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPla
         });
     }
 
+    private Bitmap getAlbumArtFromRaw(Context context, int rawId) {
+        try {
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            AssetFileDescriptor afd = context.getResources().openRawResourceFd(rawId);
+            mmr.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            byte[] artBytes = mmr.getEmbeddedPicture();
+            mmr.release();
+            if (artBytes != null) {
+                return BitmapFactory.decodeByteArray(artBytes, 0, artBytes.length);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Set album art ke ivAlbumArt, fallback ke thumb_song jika MP3 tidak punya embedded art
+    private void setAlbumArt(Song song) {
+        int index = song.getId() - 1;
+        if (index >= 0 && index < songList.length) {
+            Bitmap bitmap = getAlbumArtFromRaw(requireContext(), songList[index]);
+            if (bitmap != null) {
+                ivAlbumArt.setImageBitmap(bitmap);
+                return;
+            }
+        }
+        ivAlbumArt.setImageResource(R.drawable.thumb_song);
+    }
+
     private void toggleQueue() {
         isQueueVisible = !isQueueVisible;
         queueContainer.setVisibility(isQueueVisible ? View.VISIBLE : View.GONE);
@@ -152,7 +199,9 @@ public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPla
 
         tvTitle.setText(song.getTitle());
         tvArtist.setText(song.getArtist());
-        ivAlbumArt.setImageResource(R.drawable.thumb_song);
+
+        // Ganti dari setImageResource(thumb_song) ke setAlbumArt()
+        setAlbumArt(song);
 
         int duration = playerManager.getDuration();
         seekBar.setMax(duration);
@@ -218,7 +267,6 @@ public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPla
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        Song current = playerManager.getCurrentSong();
         playerManager.setListener((MainActivity) requireActivity());
     }
 }

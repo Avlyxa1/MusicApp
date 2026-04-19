@@ -1,5 +1,6 @@
 package com.example.musicapp.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicapp.MainActivity;
 import com.example.musicapp.R;
+import com.example.musicapp.adapters.RecentSongAdapter;
 import com.example.musicapp.adapters.SongAdapter;
 import com.example.musicapp.models.Playlist;
 import com.example.musicapp.models.Song;
@@ -22,13 +24,30 @@ import com.example.musicapp.utils.RecentManager;
 
 import java.util.List;
 
-public class HomeFragment extends Fragment implements MusicPlayerManager.OnPlayerEventListener {
+public class HomeFragment extends Fragment implements MusicPlayerManager.OnPlayerEventListener, MainActivity.OnSongChangedListener {
 
     private RecyclerView rvRecentSongs, rvAllSongs;
-    private SongAdapter recentAdapter, allSongsAdapter;
+    private RecentSongAdapter recentAdapter;
+    private SongAdapter allSongsAdapter;
     private List<Song> allSongs;
     private MusicPlayerManager playerManager;
     private PlaylistManager playlistManager;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof MainActivity) {
+            ((MainActivity) context).setSongChangedListener(this);
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).setSongChangedListener(null);
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -48,23 +67,28 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.OnPlaye
         rvRecentSongs = view.findViewById(R.id.rvRecentSongs);
         rvAllSongs = view.findViewById(R.id.rvAllSongs);
 
-        rvRecentSongs.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+        rvRecentSongs.setLayoutManager(
+                new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        );
+
         rvAllSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
+        // Wajib false agar ScrollView parent yang handle scroll, bukan RecyclerView sendiri
+        rvAllSongs.setNestedScrollingEnabled(false);
+        // false karena jumlah item bisa berubah
+        rvAllSongs.setHasFixedSize(false);
     }
 
     private void loadData() {
         List<Song> recentSongs = RecentManager.getInstance(requireContext()).getRecentSongs(allSongs);
 
-        recentAdapter = new SongAdapter(recentSongs, new SongAdapter.OnSongClickListener() {
-            @Override
-            public void onSongClick(Song song, int position) {
+        if (recentAdapter == null) {
+            recentAdapter = new RecentSongAdapter(recentSongs, (song, position) -> {
                 playAndNavigate(song, recentSongs);
-            }
-            @Override
-            public void onMoreClick(Song song, int position, View v) {
-                showSongMenu(song, v);
-            }
-        });
+            });
+            rvRecentSongs.setAdapter(recentAdapter);
+        } else {
+            recentAdapter.updateSongs(recentSongs);
+        }
 
         allSongsAdapter = new SongAdapter(allSongs, new SongAdapter.OnSongClickListener() {
             @Override
@@ -77,10 +101,18 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.OnPlaye
             }
         });
 
-        rvRecentSongs.setAdapter(recentAdapter);
         rvAllSongs.setAdapter(allSongsAdapter);
 
         updatePlayingIndicators();
+    }
+
+    @Override
+    public void onRecentSongsUpdated() {
+        if (!isAdded() || isDetached()) return;
+        List<Song> recentSongs = RecentManager.getInstance(requireContext()).getRecentSongs(allSongs);
+        if (recentAdapter != null) {
+            recentAdapter.updateSongs(recentSongs);
+        }
     }
 
     private void playAndNavigate(Song song, List<Song> list) {
@@ -137,7 +169,6 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.OnPlaye
         Song current = playerManager.getCurrentSong();
         if (current != null) {
             if (allSongsAdapter != null) allSongsAdapter.setCurrentPlayingId(current.getId());
-            if (recentAdapter != null) recentAdapter.setCurrentPlayingId(current.getId());
         }
     }
 
