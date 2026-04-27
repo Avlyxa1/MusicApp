@@ -193,7 +193,8 @@ public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPla
         rvQueue.setAdapter(queueAdapter);
     }
 
-    private void updateUI() {
+    public void updateUI() {
+        if (!isAdded()) return;
         Song song = playerManager.getCurrentSong();
         if (song == null) return;
 
@@ -267,6 +268,9 @@ public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPla
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        playerManager.setListener((MainActivity) requireActivity());
+        // Return listener to MainActivity
+        if (requireActivity() instanceof MusicPlayerManager.OnPlayerEventListener) {
+            playerManager.setListener((MusicPlayerManager.OnPlayerEventListener) requireActivity());
+        }
     }
 }

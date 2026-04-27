@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
     private TextView tvMiniTitle, tvMiniArtist;
     private MusicPlayerManager playerManager;
     private List<Song> allSongs;
+    private boolean isTablet;
 
     int[] songList = {
             R.raw.song1,
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        isTablet = getResources().getBoolean(R.bool.isTablet);
         allSongs = MusicLoader.loadAllSongs(this);
         playerManager = MusicPlayerManager.getInstance(this);
         playerManager.setListener(this);
@@ -67,6 +69,25 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         initViews();
         setupBottomNav();
         loadFragment(new HomeFragment());
+
+        if (isTablet) {
+            updateTabletPlayerVisibility();
+        }
+    }
+
+    private void updateTabletPlayerVisibility() {
+        View playerContainer = findViewById(R.id.playerContainer);
+        View divider = findViewById(R.id.tabletDivider);
+        if (playerContainer != null) {
+            if (playerManager.getCurrentSong() != null) {
+                playerContainer.setVisibility(View.VISIBLE);
+                if (divider != null) divider.setVisibility(View.VISIBLE);
+                showTabletPlayer();
+            } else {
+                playerContainer.setVisibility(View.GONE);
+                if (divider != null) divider.setVisibility(View.GONE);
+            }
+        }
     }
 
     // HomeFragment memanggil ini saat onAttach untuk mendaftar sebagai listener
@@ -82,9 +103,13 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         tvMiniTitle = findViewById(R.id.tvMiniTitle);
         tvMiniArtist = findViewById(R.id.tvMiniArtist);
 
-        miniPlayer.setOnClickListener(v -> openFullPlayer());
-        ivMiniPlayPause.setOnClickListener(v -> playerManager.togglePlayPause());
-        miniPlayer.setVisibility(View.GONE);
+        if (miniPlayer != null) {
+            miniPlayer.setOnClickListener(v -> openFullPlayer());
+            if (ivMiniPlayPause != null) {
+                ivMiniPlayPause.setOnClickListener(v -> playerManager.togglePlayPause());
+            }
+            miniPlayer.setVisibility(View.GONE);
+        }
     }
 
     private void setupBottomNav() {
@@ -110,6 +135,8 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
 
     public void openFullPlayer() {
         if (playerManager.getCurrentSong() == null) return;
+        if (isTablet) return; // On tablet it is always visible or handles its own visibility
+
         PlayerFragment playerFragment = new PlayerFragment();
         getSupportFragmentManager()
                 .beginTransaction()
@@ -117,6 +144,20 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
                 .add(R.id.fragmentContainer, playerFragment)
                 .addToBackStack("player")
                 .commit();
+    }
+
+    private void showTabletPlayer() {
+        // Check if fragment is already there
+        Fragment current = getSupportFragmentManager().findFragmentById(R.id.playerContainer);
+        if (!(current instanceof PlayerFragment)) {
+            PlayerFragment playerFragment = new PlayerFragment();
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.playerContainer, playerFragment)
+                    .commit();
+        } else {
+            ((PlayerFragment) current).updateUI();
+        }
     }
 
     public List<Song> getAllSongs() { return allSongs; }
@@ -140,17 +181,23 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
     @Override
     public void onSongChanged(Song song) {
         runOnUiThread(() -> {
-            // Update mini player
-            miniPlayer.setVisibility(View.VISIBLE);
-            tvMiniTitle.setText(song.getTitle());
-            tvMiniArtist.setText(song.getArtist());
+            if (isTablet) {
+                updateTabletPlayerVisibility();
+            } else if (miniPlayer != null) {
+                // Update mini player
+                miniPlayer.setVisibility(View.VISIBLE);
+                if (tvMiniTitle != null) tvMiniTitle.setText(song.getTitle());
+                if (tvMiniArtist != null) tvMiniArtist.setText(song.getArtist());
 
-            int index = song.getId() - 1;
-            Bitmap bitmap = getAlbumArtFromRaw(this, songList[index]);
-            if (bitmap != null) {
-                ivMiniThumb.setImageBitmap(bitmap);
-            } else {
-                ivMiniThumb.setImageResource(R.drawable.thumb_song);
+                int index = song.getId() - 1;
+                Bitmap bitmap = getAlbumArtFromRaw(this, songList[index]);
+                if (ivMiniThumb != null) {
+                    if (bitmap != null) {
+                        ivMiniThumb.setImageBitmap(bitmap);
+                    } else {
+                        ivMiniThumb.setImageResource(R.drawable.thumb_song);
+                    }
+                }
             }
 
             // Notify HomeFragment supaya RecentSongAdapter langsung diupdate
@@ -162,9 +209,11 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
 
     @Override
     public void onPlayStateChanged(boolean isPlaying) {
-        runOnUiThread(() ->
-                ivMiniPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play)
-        );
+        runOnUiThread(() -> {
+            if (ivMiniPlayPause != null) {
+                ivMiniPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+            }
+        });
     }
 
     @Override

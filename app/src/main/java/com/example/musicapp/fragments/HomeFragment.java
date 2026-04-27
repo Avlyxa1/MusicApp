@@ -24,7 +24,7 @@ import com.example.musicapp.utils.RecentManager;
 
 import java.util.List;
 
-public class HomeFragment extends Fragment implements MusicPlayerManager.OnPlayerEventListener, MainActivity.OnSongChangedListener {
+public class HomeFragment extends Fragment implements MainActivity.OnSongChangedListener {
 
     private RecyclerView rvRecentSongs, rvAllSongs;
     private RecentSongAdapter recentAdapter;
@@ -113,6 +113,7 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.OnPlaye
         if (recentAdapter != null) {
             recentAdapter.updateSongs(recentSongs);
         }
+        updatePlayingIndicators();
     }
 
     private void playAndNavigate(Song song, List<Song> list) {
@@ -175,21 +176,6 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.OnPlaye
     @Override
     public void onResume() {
         super.onResume();
-        playerManager.setListener(this);
         loadData();
     }
-
-    @Override
-    public void onSongChanged(Song song) {
-        if (isAdded()) {
-            requireActivity().runOnUiThread(this::updatePlayingIndicators);
-        }
-    }
-
-    @Override
-    public void onPlayStateChanged(boolean isPlaying) {}
-    @Override
-    public void onProgressChanged(int progress, int duration) {}
-    @Override
-    public void onQueueChanged() {}
 }

@@ -15,4 +15,6 @@
     <string name="play_next">Play Next</string>
     <string name="delete_playlist">Delete Playlist</string>
     <string name="rename_playlist">Rename</string>
+    <string name="no_song_playing">No Song Playing</string>
+    <string name="select_a_song_to_start">Select a song from the list to start listening</string>
 </resources>
