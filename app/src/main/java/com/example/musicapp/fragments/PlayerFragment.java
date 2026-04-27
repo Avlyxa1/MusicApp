@@ -2,13 +2,18 @@ package com.example.musicapp.fragments;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.app.Dialog;
+import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -25,6 +30,7 @@ import com.example.musicapp.adapters.QueueAdapter;
 import com.example.musicapp.models.Song;
 import com.example.musicapp.player.MusicPlayerManager;
 import com.example.musicapp.adapters.PlaylistManager;
+import com.github.chrisbanes.photoview.PhotoView;
 
 public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPlayerEventListener {
 
@@ -116,6 +122,8 @@ public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPla
             }
         });
 
+        ivAlbumArt.setOnClickListener(v -> showZoomableCover());
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -172,6 +180,39 @@ public class PlayerFragment extends Fragment implements MusicPlayerManager.OnPla
         if (isQueueVisible) {
             updateQueueList();
         }
+    }
+
+    private void showZoomableCover() {
+        if (!isAdded()) return;
+        Drawable coverDrawable = ivAlbumArt.getDrawable();
+        if (coverDrawable == null) return;
+
+        PhotoView photoView = new PhotoView(requireContext());
+        photoView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        photoView.setImageDrawable(coverDrawable);
+        photoView.setBackgroundColor(Color.BLACK);
+        photoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        photoView.setMaximumScale(5.0f);
+        photoView.setMediumScale(2.5f);
+        photoView.setMinimumScale(1.0f);
+
+        Dialog dialog = new Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        dialog.setContentView(photoView);
+        dialog.setCancelable(true);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+            dialog.getWindow().setLayout(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT
+            );
+        }
+
+        photoView.setOnViewTapListener((view, x, y) -> dialog.dismiss());
+        dialog.show();
     }
 
     private void updateQueueList() {
